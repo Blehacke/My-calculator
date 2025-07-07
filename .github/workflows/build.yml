@@ -10,53 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Python 3.10.13
-  uses: actions/setup-python@v4
-  with:
-   python-version: '3.10.13'
-    cache: 'pip'
+      - name: Set up Python 3.10.13
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10.13'
+          cache: 'pip'
 
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y zip unzip openjdk-17-jdk
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install buildozer cython
 
-    - name: Set JAVA_HOME
-      run: echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
-
-    - name: Install Python dependencies
-      run: pip install cython buildozer
-
-    - name: Download Android SDK
-      run: |
-        mkdir -p $HOME/android-sdk/cmdline-tools
-        cd $HOME/android-sdk/cmdline-tools
-        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
-        unzip cmdline-tools.zip
-        mv cmdline-tools latest
-        echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
-
-    - name: Accept Android SDK licenses
-      run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-
-    - name: Install Android build tools and platforms
-      run: |
-        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-31" "build-tools;31.0.0" "ndk;25.1.8937393"
-
-    - name: Fix old sdkmanager path (Buildozer expects this)
-      run: |
-        mkdir -p $HOME/android-sdk/tools/bin
-        ln -s $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/android-sdk/tools/bin/sdkmanager
-
-    - name: Build Android APK
-      run: buildozer android debug
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: MyCalculatorAPK
-        path: bin/*.apk
+      - name: Build APK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zip unzip openjdk-17-jdk
+          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+          export PATH=$JAVA_HOME/bin:$PATH
+          buildozer android debug
