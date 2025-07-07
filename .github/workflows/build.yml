@@ -10,46 +10,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: 📥 Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10.13'
+    - name: 🧰 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
 
-      - name: Install dependencies (Git, Java, unzip, Buildozer, Cython)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk wget
+    - name: 🧪 Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git zip unzip openjdk-17-jdk
+        python -m pip install --upgrade pip
+        pip install buildozer cython
 
-          python -m pip install --upgrade pip
-          pip install cython buildozer
+    - name: 📦 Build APK
+      run: |
+        buildozer android debug
 
-      - name: Install Android SDK & NDK
-        run: |
-          export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-          export PATH=$JAVA_HOME/bin:$PATH
-
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME/android-sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip -q cmdline-tools.zip
-          mv cmdline-tools latest
-          cd ~
-
-          export ANDROID_HOME=$HOME/android-sdk
-          export ANDROID_SDK_ROOT=$ANDROID_HOME
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.1.8937393"
-
-      - name: Build APK
-        env:
-          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-          ANDROID_HOME: ${{ github.workspace }}/android-sdk
-          ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
-          PATH: ${{ github.workspace }}/android-sdk/cmdline-tools/latest/bin:${{ github.workspace }}/android-sdk/platform-tools:/usr/lib/jvm/java-17-openjdk-amd64/bin:${{ env.PATH }}
-        run: |
-          buildozer android debug
+    - name: 📤 Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: MyCalculator
+        path: bin/*.apk
