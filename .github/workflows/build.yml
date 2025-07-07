@@ -35,8 +35,10 @@ jobs:
 
       - name: Build APK
         run: |
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
           export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/platform-tools:$PATH
+          export PATH=$ANDROID_SDK_ROOT/platform-tools:$PATH
+          export PATH=$ANDROID_SDK_ROOT/build-tools/30.0.3:$PATH
           buildozer android debug
 
       - name: Upload APK
