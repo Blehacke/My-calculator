@@ -123,6 +123,7 @@ fullscreen = 0
 
 # (str) Android SDK directory (if empty, it will be automatically downloaded.)
 android.sdk_path = /home/runner/android-sdk
+android.sdk_tools = /home/runner/android-sdk/cmdline-tools/latest
 
 # (str) ANT directory (if empty, it will be automatically downloaded.)
 #android.ant_path =
