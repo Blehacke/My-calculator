@@ -13,19 +13,33 @@ jobs:
     - name: 📥 Checkout code
       uses: actions/checkout@v3
 
-    - name: 🧰 Set up Python
+    - name: 🐍 Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
 
-    - name: 🧪 Install dependencies
+    - name: 🧰 Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y git zip unzip openjdk-17-jdk
         python -m pip install --upgrade pip
         pip install buildozer cython
 
-    - name: 📦 Build APK
+    - name: 📦 Install Android SDK tools
+      run: |
+        mkdir -p "$HOME/android-sdk"
+        cd "$HOME/android-sdk"
+        wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O cmdline-tools.zip
+        unzip cmdline-tools.zip -d cmdline-tools
+        mkdir -p $HOME/android-sdk/cmdline-tools/latest
+        mv cmdline-tools/cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-30" "build-tools;30.0.3"
+
+    - name: 🏗️ Build APK
+      env:
+        ANDROID_HOME: $HOME/android-sdk
+        PATH: $HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/30.0.3:$PATH
       run: |
         buildozer android debug
 
