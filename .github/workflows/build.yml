@@ -66,7 +66,7 @@ jobs:
 
       # Optional: Upload APK as a build artifact
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: app-debug.apk
           path: bin/*.apk
