@@ -29,50 +29,43 @@ jobs:
           libncurses5-dev \
           libtinfo5
 
-    - name: 📦 Install Android SDK (cached)
+    - name: 📦 Install Android SDK
       run: |
         mkdir -p "$HOME/android-sdk"
         cd "$HOME/android-sdk"
-        if [ ! -d "cmdline-tools/latest" ]; then
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip -q cmdline-tools.zip
-          mv cmdline-tools latest
-          yes | latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
-          latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
-            "platform-tools" \
-            "platforms;android-33" \
-            "build-tools;33.0.0" \
-            "ndk;25.2.9519653"
-        fi
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+        unzip -q cmdline-tools.zip
+        mv cmdline-tools latest
+        yes | latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
+        latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
+          "platform-tools" \
+          "platforms;android-33" \
+          "build-tools;33.0.0" \
+          "ndk;25.2.9519653"
         echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
         echo "$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/33.0.0" >> $GITHUB_PATH
 
     - name: 🐍 Install Python packages
       run: |
         python -m pip install --upgrade pip
-        pip install buildozer cython virtualenv python-for-android
+        pip install buildozer python-for-android
 
-    - name: 🔄 Initialize Build Environment
+    - name: 📝 Initialize Buildozer
       run: |
-        # Create spec file if missing
         if [ ! -f buildozer.spec ]; then
           buildozer init
           echo -e "\n[app]\nrequirements = python3,kivy\nandroid.api = 33\nandroid.minapi = 21" >> buildozer.spec
         fi
-        # Verify setup
-        buildozer android --version
 
-    - name: 🏗️ Build APK (with retry)
+    - name: 🔍 Verify Environment
+      run: |
+        buildozer --version
+        buildozer android debug --version
+
+    - name: � Build APK
       run: |
         buildozer -v android clean
-        buildozer -v android debug || (sleep 10 && buildozer -v android debug)
-
-    - name: 📦 Optimize APK
-      if: success()
-      run: |
-        cd bin
-        echo "Final APK size: $(du -h *.apk | cut -f1)"
-        ls -lh *.apk
+        buildozer -v android debug
 
     - name: 📤 Upload APK
       uses: actions/upload-artifact@v4
