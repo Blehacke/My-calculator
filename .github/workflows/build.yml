@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30  # Prevent hanging
+    timeout-minutes: 30
 
     steps:
     - name: 📥 Checkout code
@@ -30,7 +30,6 @@ jobs:
           libtinfo5
 
     - name: 📦 Install Android SDK (cached)
-      id: android-sdk
       run: |
         mkdir -p "$HOME/android-sdk"
         cd "$HOME/android-sdk"
@@ -53,24 +52,30 @@ jobs:
         python -m pip install --upgrade pip
         pip install buildozer cython virtualenv python-for-android
 
-    - name: 🔄 Initialize Buildozer
+    - name: 🔄 Initialize Build Environment
       run: |
-        buildozer android init
-        buildozer android clean
+        # Create spec file if missing
+        if [ ! -f buildozer.spec ]; then
+          buildozer init
+          echo -e "\n[app]\nrequirements = python3,kivy\nandroid.api = 33\nandroid.minapi = 21" >> buildozer.spec
+        fi
+        # Verify setup
+        buildozer android --version
 
     - name: 🏗️ Build APK (with retry)
       run: |
-        buildozer -v android debug || (sleep 5 && buildozer -v android debug)
+        buildozer -v android clean
+        buildozer -v android debug || (sleep 10 && buildozer -v android debug)
 
     - name: 📦 Optimize APK
       if: success()
       run: |
         cd bin
+        echo "Final APK size: $(du -h *.apk | cut -f1)"
         ls -lh *.apk
-        echo "Original APK size: $(du -h *.apk | cut -f1)"
 
     - name: 📤 Upload APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       with:
         name: Calculator-APK
         path: bin/*.apk
