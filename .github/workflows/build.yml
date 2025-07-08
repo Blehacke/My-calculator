@@ -1,50 +1,72 @@
-name: Build Android APK
+name: Build APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]  # Change this if your default branch is different
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: 🐍 Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-    - name: 🧰 Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git zip unzip openjdk-17-jdk
-        python -m pip install --upgrade pip
-        pip install buildozer cython
+      - name: Install required system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git \
+            python3-pip \
+            openjdk-11-jdk \
+            unzip \
+            zip \
+            libncurses5 \
+            libstdc++6 \
+            libffi-dev \
+            libssl-dev \
+            libsqlite3-dev \
+            zlib1g-dev \
+            libjpeg-dev \
+            libfreetype6-dev \
+            pkg-config \
+            libgl1-mesa-dev \
+            libgles2-mesa-dev \
+            libsdl2-dev \
+            libsdl2-image-dev \
+            libsdl2-mixer-dev \
+            libsdl2-ttf-dev \
+            libportmidi-dev \
+            libswscale-dev \
+            libavformat-dev \
+            libavcodec-dev \
+            libgstreamer1.0 \
+            gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good
 
-    - name: 📦 Install Android SDK tools
-      run: |
-        mkdir -p "$HOME/android-sdk"
-        cd "$HOME/android-sdk"
-        wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O cmdline-tools.zip
-        unzip cmdline-tools.zip -d cmdline-tools
-        mkdir -p $HOME/android-sdk/cmdline-tools/latest
-        mv cmdline-tools/cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
-        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-30" "build-tools;30.0.3"
+      - name: Install Buildozer and Cython
+        run: |
+          pip install --upgrade pip
+          pip install cython
+          pip install buildozer
 
-    - name: 🏗️ Build APK
-      env:
-        ANDROID_HOME: $HOME/android-sdk
-        PATH: $HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/30.0.3:$PATH
-      run: |
-        buildozer android debug
+      - name: Initialize Buildozer (if not already)
+        run: |
+          if [ ! -f buildozer.spec ]; then
+            buildozer init
+          fi
 
-    - name: 📤 Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: MyCalculator
-        path: bin/*.apk
+      - name: Run Buildozer build
+        run: buildozer android debug
+
+      # Optional: Upload APK as a build artifact
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-debug.apk
+          path: bin/*.apk
