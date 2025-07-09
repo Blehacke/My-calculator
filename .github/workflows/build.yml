@@ -7,10 +7,6 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
 
-    env:
-      ANDROID_HOME: $HOME/android-sdk
-      ANDROID_SDK_ROOT: $HOME/android-sdk
-
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v3
@@ -32,29 +28,27 @@ jobs:
           zlib1g-dev \
           libncurses5-dev \
           libtinfo5 \
-          wget
+          cython
 
     - name: 📦 Install Android SDK
       run: |
         mkdir -p "$HOME/android-sdk/cmdline-tools"
         cd "$HOME/android-sdk/cmdline-tools"
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
-        unzip -q tools.zip
-        mv cmdline-tools latest
-
-        yes | "$HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$HOME/android-sdk" --licenses
-        "$HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$HOME/android-sdk" \
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+        unzip -q cmdline-tools.zip -d latest
+        yes | ./latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
+        ./latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
           "platform-tools" \
           "platforms;android-33" \
           "build-tools;33.0.0" \
           "ndk;25.2.9519653"
-
-        echo "$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/33.0.0" >> $GITHUB_PATH
+        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/33.0.0:$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
     - name: 🐍 Install Python packages
       run: |
         python -m pip install --upgrade pip
-        pip install buildozer python-for-android cython
+        pip install buildozer cython python-for-android
 
     - name: 📝 Initialize Buildozer
       run: |
@@ -63,13 +57,14 @@ jobs:
           echo -e "\n[app]\nrequirements = python3,kivy\nandroid.api = 33\nandroid.minapi = 21" >> buildozer.spec
         fi
 
-    - name: 🔍 Verify Buildozer
+    - name: 🔍 Verify Environment
       run: |
         buildozer --version
+        buildozer android debug --version
 
-    - name: 📦 Build APK
+    - name: 🛠️ Build APK
       run: |
-        
+        buildozer -v android clean
         buildozer -v android debug
 
     - name: 📤 Upload APK
