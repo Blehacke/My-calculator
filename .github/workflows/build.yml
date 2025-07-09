@@ -28,7 +28,7 @@ jobs:
           zlib1g-dev \
           libncurses5-dev \
           libtinfo5 \
-          cython
+          cython3
 
     - name: 📦 Install Android SDK
       run: |
