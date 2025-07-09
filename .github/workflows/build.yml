@@ -69,7 +69,7 @@ jobs:
 
     - name: 📦 Build APK
       run: |
-        buildozer -v android clean
+        
         buildozer -v android debug
 
     - name: 📤 Upload APK
