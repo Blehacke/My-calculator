@@ -18,7 +18,7 @@ entrypoint = main.py
 # icon.filename = %(source.dir)s/icon.png
 
 # (list) Supported orientations
-orientation = portrait
+
 
 # (bool) Indicate if the application should be fullscreen or not
 fullscreen = 1
