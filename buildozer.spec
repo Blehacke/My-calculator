@@ -21,7 +21,7 @@ entrypoint = main.py
 
 
 # (bool) Indicate if the application should be fullscreen or not
-fullscreen = 1
+
 
 # (list) Permissions
 android.permissions = INTERNET
