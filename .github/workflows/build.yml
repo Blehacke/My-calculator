@@ -36,8 +36,8 @@ jobs:
         cd "$HOME/android-sdk/cmdline-tools"
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
         unzip -q cmdline-tools.zip -d latest
-        yes | ./latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
-        ./latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
           "platform-tools" \
           "platforms;android-33" \
           "build-tools;33.0.0" \
@@ -48,20 +48,19 @@ jobs:
     - name: 🐍 Install Python packages
       run: |
         python -m pip install --upgrade pip
-        pip install buildozer python-for-android cython
+        pip install buildozer cython python-for-android
 
-    - name: 📝 Initialize Buildozer (optional)
+    - name: 📝 Initialize Buildozer
       run: |
         if [ ! -f buildozer.spec ]; then
           buildozer init
           echo -e "\n[app]\nrequirements = python3,kivy\nandroid.api = 33\nandroid.minapi = 21" >> buildozer.spec
         fi
 
-    - name: 🛠 Clone python-for-android
+    - name: 🔍 Verify Environment
       run: |
-        mkdir -p .buildozer/android/platform
-        cd .buildozer/android/platform
-        git clone https://github.com/kivy/python-for-android.git
+        buildozer --version
+        buildozer android debug --version
 
     - name: 🔧 Build APK
       run: |
